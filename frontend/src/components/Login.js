@@ -1,22 +1,57 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../css/Login.css';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-function Login() {
+function Login({ onLogin }) {
   const [creds, setCreds] = useState({});
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  function handleLogin() {
-    if (creds.username === 'admin' && creds.password === '123') {
-      navigate('/stats');
+  const handleLogin = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/api/login", {
+        method: "post",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(creds),
+      });
+
+      if (response.ok) {
+        onLogin && onLogin({ username: creds.username });
+        navigate("/stats");
+      } else {
+        // Nếu yêu cầu không thành công, xử lý lỗi
+        setError("Invalid username or password!");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("Login failed!");
     }
-  }
+  };
 
   return (
-    <div className="login-container">
-      <input type="text" placeholder="Username" onChange={(e) => setCreds({ ...creds, username: e.target.value })} />
-      <input type="password" placeholder="Password" onChange={(e) => setCreds({ ...creds, password: e.target.value })} />
+    <div style={{ padding: 10 }}>
+      <br />
+      <span>Username:</span>
+      <br />
+      <input
+        type="text"
+        value={creds.username}
+        onChange={(e) => setCreds({ ...creds, username: e.target.value })}
+      />
+      <br />
+      <span>Password:</span>
+      <br />
+      <input
+        type="password"
+        value={creds.password}
+        onChange={(e) => setCreds({ ...creds, password: e.target.value })}
+      />
+      <br />
+      <br />
       <button onClick={handleLogin}>Login</button>
+      <p>{error}</p>
     </div>
   );
 }

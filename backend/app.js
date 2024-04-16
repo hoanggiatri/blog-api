@@ -1,38 +1,48 @@
 const express = require('express')
 const cors = require('cors');
+const BlogPosts = require('./blogPosts')
+const bodyParser = require('body-parser');
+const jsonParser = bodyParser.json();
 const app = express()
 const port = 8080
 
 app.use(cors());
 
-const BlogPosts = {
-  'first-blog-post': {
-    title: 'First Blog Post',
-    description: 'Blog này nói về việc lấy API thành công rồi.',
-  },
-  'second-blog-post': {
-    title: 'Second Blog Post',
-    description: 'Blog này là blog thứ 2 lấy api thành công nè.',
-  }
-};
+app.post("/api/post", jsonParser, (req, res) => {
+  const post = {
+    slug: req.body.slug,
+    title: req.body.title,
+    description: req.body.description,
+  };
+  BlogPosts.BlogPosts.push(post);
+  res.status(200).send({ message: "Posted successful" });
+})
 
-app.get('/api/blogs', (req, res) => {
-  const blogs = Object.keys(BlogPosts).map(key => ({
-    id: key,
-    title: BlogPosts[key].title,
-    description: BlogPosts[key].description
-  }));
-  res.json(blogs);
+app.get("/api/posts", function (req, res) {
+  res.send(JSON.stringify(BlogPosts.BlogPosts));
 });
 
-app.get('/api/blogs/:id', (req, res) => {
-  const id = req.params.id;
-  const blog = BlogPosts[id];
-  if (!blog) {
-    return res.status(404).json({ error: 'Không tìm thấy bài đăng blog' });
+app.get("/api/post/:slug", function (req, res) {
+  const slug = req.params.slug;
+  const post =
+    BlogPosts.BlogPosts.find((element) => element.slug === slug);
+  if (post) res.send(JSON.stringify(post));
+  else res.status(404).send("Not found");
+})
+
+app.post('/api/login', jsonParser, (req, res) => {
+  const creds = {
+    username: req.body.username,
+    password: req.body.password,
+  };
+  if (creds.username === "admin" && creds.password === "123") {
+    res.status(200).send({ message: "Login successful" })
   }
-  res.json(blog);
+  else {
+    res.status(400).send({ message: "Login failed" });
+  }
 });
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)

@@ -1,69 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { Link, Outlet, useParams } from 'react-router-dom';
-import axios from 'axios';
-
-const Posts = () => {
-  return (
-    <div style={{ padding: 20 }}>
-      <h2>Blog</h2>
-      <Outlet />
-    </div>
-  );
-};
-
-export default Posts;
-
-export function PostLists() {
-  const [blogPosts, setBlogPosts] = useState([]);
-
-  useEffect(() => {
-    axios.get('http://localhost:8080/api/blogs')
-      .then(response => {
-        setBlogPosts(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching blog posts:', error);
-      });
-  }, []);
-  return (
-    <ul>
-      {blogPosts.map(({ id, title }) => (
-        <li key={id}>
-          <Link to={`/posts/${id}`}>
-            <h3>{title}</h3>
-          </Link>
-        </li>
-      ))}
-    </ul>
-  );
-}
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 
 
-export function Post() {
+export default function Post() {
   const { slug } = useParams();
-  const [post, setPost] = useState(null);
-
+  const [post, setPost] = useState("");
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/blogs/${slug}`)
-      .then(response => {
-        setPost(response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching blog post:', error);
-        setPost(null);
-      });
-  }, [slug]);
-
-  if (!post) {
-    return <span>The blog post you've requested doesn't exist.</span>;
-  }
-
+    const fetchData = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/post/" + slug);
+        const result = await response.json();
+        setPost(result);
+      } catch (error) { console.error("Error fetching data:", error); }
+    };
+    fetchData();
+  }, []);
   const { title, description } = post;
-
   return (
     <div style={{ padding: 20 }}>
       <h3>{title}</h3>
       <p>{description}</p>
-    </div>
-  );
+    </div>);
 }
